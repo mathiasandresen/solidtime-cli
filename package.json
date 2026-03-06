@@ -1,0 +1,25 @@
+{
+  "name": "solidtime-cli",
+  "version": "0.1.0",
+  "description": "Timer-first CLI for solidtime",
+  "bin": {
+    "solidtime": "./index.ts"
+  },
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@solidtime/api": "^0.0.6",
+    "@stricli/core": "^1.2.6"
+  }
+}

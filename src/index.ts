@@ -382,13 +382,13 @@ const app = buildApplication(
 export async function run(argv: string[]) {
   await runCli(app, argv, {
     process,
-    forCommand: async () => loadExecutionContext(),
+    forCommand: async () => loadExecutionContext(argv),
   });
 }
 
-async function loadExecutionContext(): Promise<AppCommandContext> {
+async function loadExecutionContext(argv: string[]): Promise<AppCommandContext> {
   const loadedConfig = await loadStoredConfig();
-  const runtimeConfig = resolveRuntimeConfig(readRuntimeFlags(), loadedConfig);
+  const runtimeConfig = resolveRuntimeConfig(readRuntimeFlags(argv), loadedConfig);
 
   for (const warning of loadedConfig.warnings) {
     console.warn(`warning: ${warning}`);
@@ -404,9 +404,9 @@ async function loadExecutionContext(): Promise<AppCommandContext> {
   };
 }
 
-function readRuntimeFlags(): CliFlags {
+function readRuntimeFlags(argv: string[]): CliFlags {
   const flags: Record<string, unknown> = {};
-  const inputs = Bun.argv.slice(2);
+  const inputs = argv;
 
   for (let index = 0; index < inputs.length; index += 1) {
     const input = inputs[index];

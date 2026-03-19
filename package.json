@@ -1,25 +1,41 @@
 {
   "name": "solidtime-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Timer-first CLI for solidtime",
-  "bin": {
-    "solidtime": "./index.ts"
-  },
-  "module": "index.ts",
   "type": "module",
-  "private": true,
+  "main": "./dist/solidtime.js",
+  "bin": {
+    "solidtime": "./dist/solidtime.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "bun run index.ts",
-    "typecheck": "tsc --noEmit"
+    "build": "rm -rf dist && bun build ./index.ts --target node --outfile ./dist/solidtime.js && chmod +x ./dist/solidtime.js",
+    "typecheck": "tsc --noEmit",
+    "prepack": "bun run build"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
   "dependencies": {
     "@solidtime/api": "^0.0.6",
     "@stricli/core": "^1.2.6"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mathiasandresen/solidtime-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mathiasandresen/solidtime-cli/issues"
+  },
+  "homepage": "https://github.com/mathiasandresen/solidtime-cli#readme"
 }

@@ -74,6 +74,6 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The release workflow installs dependencies with Bun, typechecks, builds `dist/solidtime.js`, and publishes to npm.
+The release workflow installs dependencies with Bun, typechecks, builds `dist/solidtime.js`, and publishes to npm using trusted publishing.
 
-To enable publishing, add an `NPM_TOKEN` repository secret with permission to publish `solidtime-cli`.
+To enable publishing, configure `solidtime-cli` on npm with a GitHub Actions trusted publisher for this repository and the `release.yml` workflow filename. No `NPM_TOKEN` repository secret is needed for publishing.

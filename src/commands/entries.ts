@@ -35,8 +35,8 @@ export async function handleEntriesList(
   printTable(
     response.data.map((entry) => ({
       id: entry.id,
-      start: formatTimestamp(entry.start),
-      end: formatTimestamp(entry.end),
+      start: formatTimestamp(entry.start, context.me.timezone),
+      end: formatTimestamp(entry.end, context.me.timezone),
       duration: entry.end ? formatDuration(entry.duration) : "running",
       projectId: entry.project_id,
       taskId: entry.task_id,

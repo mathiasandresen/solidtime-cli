@@ -24,7 +24,7 @@ export async function handleTimerStatus(
     return;
   }
 
-  printTimerDetails(status.entry, status.project?.name, status.task?.name);
+  printTimerDetails(status.entry, context.me.timezone, status.project?.name, status.task?.name);
 }
 
 export async function handleTimerStart(
@@ -74,7 +74,7 @@ export async function handleTimerStart(
   }
 
   console.log(`Started timer ${response.data.id}`);
-  printTimerDetails(response.data, project?.name, task?.name);
+  printTimerDetails(response.data, context.me.timezone, project?.name, task?.name);
 }
 
 export async function handleTimerStop(
@@ -106,7 +106,7 @@ export async function handleTimerStop(
   }
 
   console.log(`Stopped timer ${response.data.id}`);
-  printTimerDetails(response.data, status.project?.name, status.task?.name);
+  printTimerDetails(response.data, context.me.timezone, status.project?.name, status.task?.name);
 }
 
 function parseTimestampInput(value: string | undefined): string | undefined {
@@ -122,12 +122,17 @@ function parseTimestampInput(value: string | undefined): string | undefined {
   return date.toISOString();
 }
 
-function printTimerDetails(entry: TimeEntry, projectName?: string, taskName?: string) {
+function printTimerDetails(
+  entry: TimeEntry,
+  timezone: string,
+  projectName?: string,
+  taskName?: string,
+) {
   printKeyValue([
     ["id", entry.id],
     ["description", entry.description],
-    ["start", formatTimestamp(entry.start)],
-    ["end", formatTimestamp(entry.end)],
+    ["start", formatTimestamp(entry.start, timezone)],
+    ["end", formatTimestamp(entry.end, timezone)],
     ["elapsed", entry.end ? formatDuration(entry.duration) : formatElapsedFrom(entry.start)],
     ["project", projectName ?? entry.project_id],
     ["task", taskName ?? entry.task_id],

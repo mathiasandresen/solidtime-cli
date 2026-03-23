@@ -60,7 +60,10 @@ export function formatDuration(totalSeconds: number | null | undefined): string 
   return `${seconds}s`;
 }
 
-export function formatTimestamp(value: string | null | undefined): string {
+export function formatTimestamp(
+  value: string | null | undefined,
+  timezone: string | null | undefined,
+): string {
   if (!value) {
     return "-";
   }
@@ -70,7 +73,11 @@ export function formatTimestamp(value: string | null | undefined): string {
     return value;
   }
 
-  return date.toLocaleString();
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "medium",
+    timeZone: timezone ?? "UTC",
+  }).format(date);
 }
 
 export function formatElapsedFrom(start: string): string {

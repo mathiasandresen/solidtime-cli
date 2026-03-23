@@ -1,6 +1,6 @@
 {
   "name": "solidtime-cli",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Timer-first CLI for solidtime",
   "type": "module",
   "main": "./dist/solidtime.js",

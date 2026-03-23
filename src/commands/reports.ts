@@ -148,7 +148,7 @@ function formatPercentage(value: number): string {
 function getWeekRange(now: Date, timezone: string, weekStart: Weekday, offset: number) {
   const todayParts = getZonedParts(now, timezone);
   const weekdayIndex = getWeekdayIndex(now, timezone);
-  const startOffset = mod(weekdayIndex - weekdayToIndex(weekStart), 7) + offset * 7;
+  const startOffset = mod(weekdayIndex - weekdayToIndex(weekStart), 7) - offset * 7;
   const startDate = shiftDate(todayParts.year, todayParts.month, todayParts.day, -startOffset);
   const endDate = shiftDate(startDate.year, startDate.month, startDate.day, 7);
 

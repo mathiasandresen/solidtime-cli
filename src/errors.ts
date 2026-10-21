@@ -9,6 +9,10 @@ export class CliError extends Error {
 }
 
 export function formatError(error: unknown): string {
+  if (isApiStatus(error, 401)) {
+    return "Authentication failed (401): the API key is invalid, expired, or for a different solidtime instance. Run `solidtime init` to update it.";
+  }
+
   if (error instanceof CliError) {
     return error.message;
   }

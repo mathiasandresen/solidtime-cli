@@ -5,6 +5,7 @@ import { type SolidTimeClient } from "../api";
 import { getTimerStatus, resolveProjectAndTask } from "../context";
 import { CliError } from "../errors";
 import { formatDuration, formatElapsedFrom, formatTimestamp, printJson, printKeyValue } from "../output";
+import { formatApiTimestamp, parseTimestampInput } from "../timestamps";
 import type { CliFlags, CommandContext } from "../types";
 
 export async function handleTimerStatus(
@@ -43,7 +44,7 @@ export async function handleTimerStart(
   const billable =
     getBooleanFlag(flags, "billable") ??
     context.config.defaultBillable;
-  const timestamp = parseTimestampInput(getStringFlag(flags, "at")) ?? new Date().toISOString();
+  const timestamp = parseTimestampInput(getStringFlag(flags, "at"), context.me.timezone) ?? formatApiTimestamp();
   const tags = getStringArrayFlag(flags, "tag");
   const { project, task } = await resolveProjectAndTask(client, context.config.organizationId!, {
     projectInput,
@@ -87,7 +88,7 @@ export async function handleTimerStop(
     throw new CliError("No active timer to stop.");
   }
 
-  const stopTime = parseTimestampInput(getStringFlag(flags, "at")) ?? new Date().toISOString();
+  const stopTime = parseTimestampInput(getStringFlag(flags, "at"), context.me.timezone) ?? formatApiTimestamp();
   const response = await client.updateTimeEntry(
     {
       end: stopTime,
@@ -109,20 +110,7 @@ export async function handleTimerStop(
   printTimerDetails(response.data, context.me.timezone, status.project?.name, status.task?.name);
 }
 
-function parseTimestampInput(value: string | undefined): string | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    throw new CliError(`Invalid timestamp: ${value}`);
-  }
-
-  return date.toISOString();
-}
-
-function printTimerDetails(
+export function printTimerDetails(
   entry: TimeEntry,
   timezone: string,
   projectName?: string,

@@ -10,7 +10,7 @@ import {
 
 import { createClient, type SolidTimeClient } from "./api";
 import { handleConfigShow, handleInit } from "./commands/config";
-import { handleEntriesList } from "./commands/entries";
+import { handleEntriesCreate, handleEntriesList } from "./commands/entries";
 import { handleProjectsList } from "./commands/projects";
 import { handleReportsWeek } from "./commands/reports";
 import { handleTasksList } from "./commands/tasks";
@@ -73,6 +73,16 @@ interface EntriesListFlags extends SharedFlags {
   to?: string;
   active?: boolean;
   limit?: string;
+}
+
+interface EntriesCreateFlags extends SharedFlags {
+  start?: string;
+  end?: string;
+  description?: string;
+  project?: string;
+  task?: string;
+  billable?: boolean;
+  tag?: string[];
 }
 
 interface ReportsWeekFlags extends SharedFlags {}
@@ -221,7 +231,7 @@ const timerStartCommand = buildCommand<TimerStartFlags, [], AppCommandContext>({
       project: stringFlag("Project name or ID"),
       task: stringFlag("Task name or ID"),
       billable: booleanFlag("Whether the timer is billable"),
-      at: stringFlag("Start timestamp"),
+      at: stringFlag("Start timestamp (HH:MM, YYYY-MM-DD[ HH:MM], or ISO)"),
       tag: {
         kind: "parsed" as const,
         parse: String,
@@ -244,7 +254,7 @@ const timerStopCommand = buildCommand<TimerStopFlags, [], AppCommandContext>({
   parameters: {
     flags: {
       ...sharedFlags,
-      at: stringFlag("Stop timestamp"),
+      at: stringFlag("Stop timestamp (HH:MM, YYYY-MM-DD[ HH:MM], or ISO)"),
     },
   },
   async func(flags) {
@@ -259,14 +269,41 @@ const entriesListCommand = buildCommand<EntriesListFlags, [], AppCommandContext>
   parameters: {
     flags: {
       ...sharedFlags,
-      from: stringFlag("Filter entries from timestamp"),
-      to: stringFlag("Filter entries to timestamp"),
+      from: stringFlag("Filter entries from timestamp (HH:MM, YYYY-MM-DD[ HH:MM], or ISO)"),
+      to: stringFlag("Filter entries to timestamp (HH:MM, YYYY-MM-DD[ HH:MM], or ISO)"),
       active: booleanFlag("Filter by active state"),
       limit: stringFlag("Maximum number of entries to return"),
     },
   },
   async func(flags) {
     await handleEntriesList(flags, requireCommandContext(this), requireClient(this));
+  },
+});
+
+const entriesCreateCommand = buildCommand<EntriesCreateFlags, [], AppCommandContext>({
+  docs: {
+    brief: "Create a completed time entry",
+  },
+  parameters: {
+    flags: {
+      ...sharedFlags,
+      start: stringFlag("Start timestamp, required (HH:MM, YYYY-MM-DD[ HH:MM], or ISO)"),
+      end: stringFlag("End timestamp, defaults to now (HH:MM, YYYY-MM-DD[ HH:MM], or ISO)"),
+      description: stringFlag("Entry description"),
+      project: stringFlag("Project name or ID"),
+      task: stringFlag("Task name or ID"),
+      billable: booleanFlag("Whether the entry is billable"),
+      tag: {
+        kind: "parsed" as const,
+        parse: String,
+        brief: "Tag ID",
+        optional: true as const,
+        variadic: true as const,
+      },
+    },
+  },
+  async func(flags) {
+    await handleEntriesCreate(flags, requireCommandContext(this), requireClient(this));
   },
 });
 
@@ -335,6 +372,7 @@ const app = buildApplication(
       entries: buildRouteMap({
         routes: {
           list: entriesListCommand,
+          create: entriesCreateCommand,
         },
         docs: {
           brief: "Time entry commands",
@@ -382,7 +420,9 @@ const app = buildApplication(
 export async function run(argv: string[]) {
   await runCli(app, argv, {
     process,
-    forCommand: async () => loadExecutionContext(argv),
+    // init/config must work with a missing or invalid token, so they skip the API calls.
+    forCommand: async ({ prefix }) =>
+      ["init", "config"].includes(prefix[1] ?? "") ? { process } : loadExecutionContext(argv),
   });
 }
 
@@ -488,15 +528,16 @@ function requireClient(context: AppCommandContext): SolidTimeClient {
 }
 
 function createApplicationText(): ApplicationText {
+  const red = (error: unknown, ansiColor: boolean) => {
+    const message = formatError(error);
+    return ansiColor ? `\x1B[1m\x1B[31m${message}\x1B[39m\x1B[22m` : message;
+  };
+
   return {
     ...text_en,
-    exceptionWhileRunningCommand(error, ansiColor) {
-      const message = formatError(error);
-      return ansiColor ? `\x1B[1m\x1B[31m${message}\x1B[39m\x1B[22m` : message;
-    },
-    commandErrorResult(error, ansiColor) {
-      const message = formatError(error);
-      return ansiColor ? `\x1B[1m\x1B[31m${message}\x1B[39m\x1B[22m` : message;
-    },
+    // Stricli prints this one without a trailing newline.
+    exceptionWhileLoadingCommandContext: (error, ansiColor) => `${red(error, ansiColor)}\n`,
+    exceptionWhileRunningCommand: red,
+    commandErrorResult: red,
   };
 }
